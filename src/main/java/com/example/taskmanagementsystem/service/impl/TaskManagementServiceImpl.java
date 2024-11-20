@@ -1,11 +1,14 @@
 package com.example.taskmanagementsystem.service.impl;
 
+import com.example.taskmanagementsystem.domain.dto.TaskDto;
 import com.example.taskmanagementsystem.domain.model.PriorityTask;
 import com.example.taskmanagementsystem.domain.model.StatusTask;
 import com.example.taskmanagementsystem.domain.model.Task;
+import com.example.taskmanagementsystem.domain.model.TaskComments;
 import com.example.taskmanagementsystem.exceptions.InvalidFormatDataException;
 import com.example.taskmanagementsystem.exceptions.TaskIdNotFoundException;
 import com.example.taskmanagementsystem.exceptions.UserNotFoundException;
+import com.example.taskmanagementsystem.repository.CommentsRepository;
 import com.example.taskmanagementsystem.repository.TaskRepository;
 import com.example.taskmanagementsystem.service.TaskManagementService;
 import jakarta.transaction.Transactional;
@@ -18,19 +21,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TaskManagementServiceImpl implements TaskManagementService {
     private final TaskRepository taskRepository;
-//    @Override
-//    public Task getTask() {
-//        Task task = Task.builder()
-//                .priorityTask(PriorityTask.LOW)
-//                .title("Заголовок")
-//                .description("Что то да есть")
-//                .taskPerformer("nik@mail.ru")
-//                .statusTask(StatusTask.WAITING)
-//                .emailAuthorOfTheTask("nkub@yandex.ru")
-//                .build();
-//        taskRepository.save(task);
-//        return task;
-//    }
+    private final CommentsRepository commentsRepository;
 
     @Override
     public List<Task> findAllTasks() {
@@ -46,15 +37,16 @@ public class TaskManagementServiceImpl implements TaskManagementService {
 
     @Override
     @Transactional
-    public Task createTask(Task task){
-        //todo add email by user
-        if(task.getId()==null){
-            task.setEmailAuthorOfTheTask(Math.random()*100000+"@mail.ru");
-            return taskRepository.save(task);
-        }
-        task.setId(null);
-        task.setEmailAuthorOfTheTask(Math.random()*100000+"@mail.ru");
-        return taskRepository.save(task);
+    public Task createTask(TaskDto task){
+        Task newTask = Task.builder()
+                .emailAuthorOfTheTask(Math.random()*100000+"@mail.ru")
+                .priorityTask(task.getPriorityTask())
+                .statusTask(task.getStatusTask())
+                .taskPerformer(task.getTaskPerformer())
+                .description(task.getDescription())
+                .title(task.getTitle())
+                .build();
+        return taskRepository.save(newTask);
     }
 
     @Override
@@ -96,6 +88,28 @@ public class TaskManagementServiceImpl implements TaskManagementService {
         }catch(IllegalArgumentException e){
             throw new InvalidFormatDataException();
         }
+    }
+
+    @Override
+    public Task updateExecutorById(Long id, String email) {
+        try {
+            Task oldTask = taskRepository.findTaskById(id).orElseThrow(TaskIdNotFoundException::new);
+            oldTask.setTaskPerformer(email);
+            return taskRepository.save(oldTask);
+        }catch(IllegalArgumentException e){
+            throw new InvalidFormatDataException();
+        }
+    }
+
+    @Override
+    public TaskComments createCommentByTaskId(Long taskId, TaskComments comment) {
+        Task task = taskRepository.findTaskById(taskId).orElseThrow(TaskIdNotFoundException::new);
+        TaskComments newComments = TaskComments.builder()
+                .comment(comment.getComment())
+                .postId(task.getId())
+                .emailCommentators("EMAIL>RU")
+                .build();
+        return commentsRepository.save(newComments);
     }
 
 }

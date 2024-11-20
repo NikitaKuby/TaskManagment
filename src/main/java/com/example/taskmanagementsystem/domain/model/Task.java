@@ -3,6 +3,10 @@ package com.example.taskmanagementsystem.domain.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 
 @Entity
 @Builder
@@ -18,7 +22,7 @@ public class Task {
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
 
-    @Column(name = "title", nullable = false)
+    @Column(name = "title")
     private String title;
 
     @Column(name = "description")
@@ -39,7 +43,8 @@ public class Task {
     @Column(name = "priority")
     private PriorityTask priorityTask;
 
-
-
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "post_id")
+    private Set<TaskComments> comments = new HashSet<TaskComments>();
 
 }

@@ -1,16 +1,21 @@
 package com.example.taskmanagementsystem.service.impl;
 
+import com.example.taskmanagementsystem.domain.dto.CommentsDto;
 import com.example.taskmanagementsystem.domain.dto.TaskDto;
 import com.example.taskmanagementsystem.domain.model.PriorityTask;
 import com.example.taskmanagementsystem.domain.model.StatusTask;
 import com.example.taskmanagementsystem.domain.model.Task;
 import com.example.taskmanagementsystem.domain.model.TaskComments;
+import com.example.taskmanagementsystem.exceptions.EmailExecutorNotFoundException;
 import com.example.taskmanagementsystem.exceptions.InvalidFormatDataException;
 import com.example.taskmanagementsystem.exceptions.TaskIdNotFoundException;
 import com.example.taskmanagementsystem.exceptions.UserNotFoundException;
 import com.example.taskmanagementsystem.repository.CommentsRepository;
 import com.example.taskmanagementsystem.repository.TaskRepository;
+import com.example.taskmanagementsystem.repository.UserRepository;
+import com.example.taskmanagementsystem.service.AuthenticationService;
 import com.example.taskmanagementsystem.service.TaskManagementService;
+import com.example.taskmanagementsystem.service.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -22,6 +27,7 @@ import java.util.List;
 public class TaskManagementServiceImpl implements TaskManagementService {
     private final TaskRepository taskRepository;
     private final CommentsRepository commentsRepository;
+    private final UserService userService;
 
     @Override
     public List<Task> findAllTasks() {
@@ -30,7 +36,6 @@ public class TaskManagementServiceImpl implements TaskManagementService {
 
     @Override
     public Task findTaskById(Long id) {
-        //todo Exception
         return taskRepository.findTaskById(id)
                 .orElseThrow(TaskIdNotFoundException::new);
     }
@@ -39,7 +44,7 @@ public class TaskManagementServiceImpl implements TaskManagementService {
     @Transactional
     public Task createTask(TaskDto task){
         Task newTask = Task.builder()
-                .emailAuthorOfTheTask(Math.random()*100000+"@mail.ru")
+                .emailAuthorOfTheTask(userService.getCurrentUser().getUsername())
                 .priorityTask(task.getPriorityTask())
                 .statusTask(task.getStatusTask())
                 .taskPerformer(task.getTaskPerformer())
@@ -61,55 +66,63 @@ public class TaskManagementServiceImpl implements TaskManagementService {
     @Override
     @Transactional
     public void deleteById(Long id) {
-        if (!taskRepository.existsById(id)) {
-            throw new TaskIdNotFoundException();
-        }else{
+        if (taskRepository.existsById(id)&&userService.doesTheUserHavePermission(id)) {
             taskRepository.deleteById(id);
+        }else{
+            throw new TaskIdNotFoundException();
         }
     }
 
     @Override
+    @Transactional
     public Task updatePriority(Long id, String newPriority) {
-        try {
+        if(userService.doesTheUserHavePermission(id)){
             Task oldTask = taskRepository.findTaskById(id).orElseThrow(TaskIdNotFoundException::new);
             oldTask.setPriorityTask(PriorityTask.valueOf(newPriority.toUpperCase()));
             return taskRepository.save(oldTask);
-        }catch(IllegalArgumentException e){
+        }else{
             throw new InvalidFormatDataException();
         }
     }
 
     @Override
+    @Transactional
     public Task updateStatus(Long id, String newStatus) {
-        try {
+        if(userService.doesTheUserHavePermission(id)||userService.doesTheUserHavePermissionExecutor(id)){
             Task oldTask = taskRepository.findTaskById(id).orElseThrow(TaskIdNotFoundException::new);
             oldTask.setStatusTask(StatusTask.valueOf(newStatus.toUpperCase()));
             return taskRepository.save(oldTask);
-        }catch(IllegalArgumentException e){
+        }else{
             throw new InvalidFormatDataException();
         }
     }
 
     @Override
+    @Transactional
     public Task updateExecutorById(Long id, String email) {
-        try {
+        if(userService.doesTheUserHavePermission(id)) {
             Task oldTask = taskRepository.findTaskById(id).orElseThrow(TaskIdNotFoundException::new);
             oldTask.setTaskPerformer(email);
             return taskRepository.save(oldTask);
-        }catch(IllegalArgumentException e){
-            throw new InvalidFormatDataException();
+        }else {
+            throw new EmailExecutorNotFoundException();
         }
     }
 
     @Override
+    @Transactional
     public TaskComments createCommentByTaskId(Long taskId, TaskComments comment) {
-        Task task = taskRepository.findTaskById(taskId).orElseThrow(TaskIdNotFoundException::new);
-        TaskComments newComments = TaskComments.builder()
-                .comment(comment.getComment())
-                .postId(task.getId())
-                .emailCommentators("EMAIL>RU")
-                .build();
-        return commentsRepository.save(newComments);
+        if(userService.doesTheUserHavePermission(taskId)|| userService.doesTheUserHavePermissionExecutor(taskId)) {
+            Task task = taskRepository.findTaskById(taskId).orElseThrow(TaskIdNotFoundException::new);
+            TaskComments newComments = TaskComments.builder()
+                    .comment(comment.getComment())
+                    .postId(task.getId())
+                    .emailCommentators(userService.getCurrentUser().getUsername())
+                    .build();
+            return commentsRepository.save(newComments);
+        }else {
+            throw new EmailExecutorNotFoundException();
+        }
     }
 
 }

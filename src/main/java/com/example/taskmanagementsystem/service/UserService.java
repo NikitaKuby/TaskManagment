@@ -2,6 +2,8 @@ package com.example.taskmanagementsystem.service;
 
 import com.example.taskmanagementsystem.domain.model.Role;
 import com.example.taskmanagementsystem.domain.model.UserDetailsImpl;
+import com.example.taskmanagementsystem.exceptions.UserNotFoundException;
+import com.example.taskmanagementsystem.repository.TaskRepository;
 import com.example.taskmanagementsystem.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -13,21 +15,21 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository repository;
+    private final TaskRepository taskRepository;
     public UserDetailsImpl save(UserDetailsImpl user) {
         return repository.save(user);
     }
 
     public UserDetailsImpl create(UserDetailsImpl user) {
         if (repository.existsByUsername(user.getUsername())) {
-            // Заменить на свои исключения
-            throw new RuntimeException("Пользователь с таким именем уже существует");
+            throw new UserNotFoundException();
         }
         return save(user);
     }
 
     public UserDetailsImpl getByUsername(String username) {
         return repository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("Пользователь не найден"));
+                .orElseThrow(UserNotFoundException::new);
 
     }
 
@@ -39,6 +41,24 @@ public class UserService {
         // Получение имени пользователя из контекста Spring Security
         var username = SecurityContextHolder.getContext().getAuthentication().getName();
         return getByUsername(username);
+    }
+
+    public boolean doesTheUserHavePermission(Long id){
+        String userEmail = getCurrentUser().getUsername();
+        String userTaskEmail=taskRepository.findTaskById(id).get().getEmailAuthorOfTheTask();
+        if(getCurrentUser().getRole().equals(Role.USER)&&userEmail.equals(userTaskEmail)){
+            return true;
+        }else
+            return getCurrentUser().getRole().equals(Role.ADMIN);
+    }
+
+    public boolean doesTheUserHavePermissionExecutor(Long id){
+        String userEmail = getCurrentUser().getUsername();
+        String userTaskEmail=taskRepository.findTaskById(id).get().getTaskPerformer();
+        if(getCurrentUser().getRole().equals(Role.USER)&&userEmail.equals(userTaskEmail)){
+            return true;
+        }else
+            return getCurrentUser().getRole().equals(Role.ADMIN);
     }
 
     @Deprecated

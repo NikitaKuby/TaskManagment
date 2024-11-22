@@ -5,6 +5,7 @@ import com.example.taskmanagementsystem.domain.dto.SignInRequest;
 import com.example.taskmanagementsystem.domain.dto.SignUpRequest;
 import com.example.taskmanagementsystem.domain.model.Role;
 import com.example.taskmanagementsystem.domain.model.UserDetailsImpl;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -19,6 +20,9 @@ public class AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
 
+
+    @Getter
+    private String email;
     public JwtAuthenticationResponse signUp(SignUpRequest request) {
 
         var user = UserDetailsImpl.builder()
@@ -30,6 +34,7 @@ public class AuthenticationService {
         userService.create(user);
 
         var jwt = jwtService.generateToken(user);
+        email = user.getUsername();
         return new JwtAuthenticationResponse(jwt);
     }
 
@@ -47,4 +52,5 @@ public class AuthenticationService {
         System.out.println(jwt);
         return new JwtAuthenticationResponse(jwt);
     }
+
 }

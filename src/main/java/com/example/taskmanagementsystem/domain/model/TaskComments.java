@@ -23,7 +23,5 @@ public class TaskComments {
 
     @Column(name="post_id", nullable = false)
     private Long postId;
-    //@ManyToOne(fetch = FetchType.LAZY, optional = false)
-    //@JoinColumn(name = "post_id", nullable = false)
-    //private Task task;
+
 }

@@ -1,5 +1,6 @@
 package com.example.taskmanagementsystem.controller;
 
+import com.example.taskmanagementsystem.domain.dto.CommentsDto;
 import com.example.taskmanagementsystem.domain.dto.TaskDto;
 import com.example.taskmanagementsystem.domain.model.Task;
 import com.example.taskmanagementsystem.domain.model.TaskComments;
@@ -54,7 +55,6 @@ public class TaskManagementController {
         return new ResponseEntity<>(new Gson().toJson(taskManagementService.updateExecutorById(id, email)), HttpStatus.OK);
     }
 
-    //USER ROLE
     @PostMapping("/{taskId}/comments")
     public TaskComments createComment(@PathVariable (value = "taskId") Long taskId,
                                       @RequestBody TaskComments comment) {

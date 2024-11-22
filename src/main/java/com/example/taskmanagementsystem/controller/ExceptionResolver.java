@@ -10,6 +10,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -37,6 +38,7 @@ public class ExceptionResolver {
         headers.setContentType(MediaType.APPLICATION_JSON);
         return new ResponseEntity<>(new Gson().toJson(new ExceptionAnswerDTO("User not found")),headers,HttpStatus.BAD_REQUEST);
     }
+
 
 
 

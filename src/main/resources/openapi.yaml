@@ -1,0 +1,396 @@
+openapi: 3.0.3
+info:
+  title: Swagger Petstore - OpenAPI 3.0
+  version: 1.0.11
+servers:
+  - url: http://localhost:8080/
+tags:
+  - name: auth
+    description: Регистрация
+  - name: tasks
+    description: Управление менеджером задач
+paths:
+  /auth/sign-up:
+    post:
+      tags:
+        - auth
+      summary: Регистрация нового пользователя
+      description: Регистрирует пользователя и выдёт JWT
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AUTH'
+      responses:
+        '200':
+          description: Успешная регистрация с возвратом JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JWT'
+        "400":
+          description: Пользователь с таким именем уже существeет или неправильный формат данных
+          content:
+            application/json:
+              schema: 
+                $ref: '#/components/schemas/ErrorAuth'
+  /auth/sign-in:
+    post:
+      tags:
+        - auth
+      summary: Авторизация пользователя
+      description: Авторизует и выдёт JWT
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AUTH'
+      responses:
+        '200':
+          description: Успешная регистрация с возвратом JWT
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JWT'
+        "400":
+          description: неправильный формат данных
+          content:
+            application/json:
+              schema: 
+                $ref: '#/components/schemas/ErrorAuth'
+        "404":
+          description: Пользователь не найден
+          content:
+            application/json:
+              schema: 
+                $ref: '#/components/schemas/ErrorAu'
+  /tasks:
+    get:
+      tags:
+        - tasks
+      summary: Поиск всех задач
+      operationId: getAllTasks
+      responses:
+        '200':
+          description: Успешная операция и получение списка задач
+          content:
+            application/json:
+              schema: 
+                $ref: '#/components/schemas/Tasks'
+        '403':
+          description: Нет доступа
+    post:
+      tags:
+        - tasks
+      summary: Создание задачи
+      operationId: createTask
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTask'
+      responses:
+        '201':
+          description: Успешное создание задачи и вовзрат его нам
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        "400":
+          description: Незаполненно бязательное поле "title"
+        "403":
+          description: unauthorized
+  /tasks/{id}:
+    delete:
+      tags:
+        - tasks
+      summary: Delete user
+      description: This can only be done by the logged in user.
+      operationId: deleteUser
+      parameters:
+        - name: id
+          in: path
+          description: The task Id that needs to be deleted
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: успешное удаление
+        "403":
+          description: Нет доступа к этой операции
+        '404':
+          description: Задача не найдена
+  /tasks/{email}:
+    get:
+      tags:
+        - tasks
+      summary: Поиск всех задач по email
+      operationId: getTasksByEmail
+      parameters:
+        - name: email
+          in: path
+          description: the email that needs to be get list tasks
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Успешная операция и получение списка задач
+          content:
+            application/json:
+              schema: 
+                $ref: '#/components/schemas/Tasks'
+        '403':
+          description: unauthorized
+  /tasks/{id}/priority:
+   patch:
+      tags:
+        - tasks
+      summary: сменить приоритет
+      operationId: updatePriority
+      parameters:
+        - name: id
+          in: path
+          description: id задачи для смены приоритета
+          required: true
+          schema:
+            type: string
+        - name: priority
+          in: header
+          description: получение приоритета
+          required: true
+          schema:
+            type: string
+            enum:
+            - HIGH
+            - MEDIUM
+            - LOW
+      responses:
+        '200':
+          description: Успешное обновление приоритета
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        "400":
+          description: неверный формат приоритета  
+        "403":
+          description: нет доступа
+  /tasks/{id}/status:
+    patch:
+      tags:
+        - tasks
+      summary: Сменить статус
+      operationId: updateStatus
+      parameters:
+        - name: id
+          in: path
+          description: id задачи для смены статуса
+          required: true
+          schema:
+            type: string
+        - name: status
+          in: header
+          description: Укажите статус
+          required: true
+          schema:
+            type: string
+            enum:
+            - COMPLETED
+            - IN_PROGRESS
+            - WAITING
+      responses:
+        '200':
+          description: Успешное обновление приоритета
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        "400":
+          description: неверный формат приоритета  
+        "403":
+          description: нет доступа
+  /tasks/{id}/assignExecutor:
+    patch:
+      tags:
+        - tasks
+      summary: Назначить или изменить исполнителя задачи
+      operationId: assignExecutor
+      parameters:
+        - name: id
+          in: path
+          description: id задачи для назначения исполнителя
+          required: true
+          schema:
+            type: string
+        - name: emailExecutor
+          in: header
+          description: Укажите Исполнителя задачи
+          required: true
+          schema:
+            type: string
+            example: "admin@mail.ru"
+      responses:
+        '200':
+          description: Успешное обновление приоритета
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        "400":
+          description: неверный формат приоритета  
+        "403":
+          description: нет доступа
+          
+  /tasks/{id}/comments:
+    post:
+      tags:
+        - tasks
+      summary: Назначить или изменить исполнителя задачи
+      operationId: assignExecutor
+      parameters:
+        - name: id
+          in: path
+          description: id задачи для назначения исполнителя
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Comment'
+      responses:
+        '200':
+          description: Успешно
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comments'
+        "400":
+          description: неверный формат приоритета  
+        "403":
+          description: нет доступа
+  
+  
+components:
+  schemas:
+    JWT:
+      type: object
+      properties:
+        token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiVVNFUiIsImlkIjo4LCJzdWIiOiJ10YvRi3NlQG1haWwucnUiLCJpYXQiOjE3MzIzMDcwNTcsImV4cCI6MTczMjQ1MTA1N30.bTylu9viArbYYHEF67XcZkk6Z97dQXJxU6VwCB6bMs8"
+    AUTH:
+      type: object
+      properties:
+        name:
+          type: string
+          example: user@mail.ru
+        password:
+          type: string
+          example: "password"
+    ErrorAuth:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Пользователь с таким именем уже существует"
+    ErrorAu:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "User not found"
+    Task:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "152"
+        title:
+          type: string
+          example: "Примем заголовка"
+        description: 
+          type: string
+          example: "Статья, поставленная задача"
+        emailAuthorOfTheTask:
+          type: string
+          example: "user@mail.ru"
+        taskPerformer: 
+          type: string
+          example: "user2@mail.ru"
+        statusTask:
+          type: string
+          enum:
+            - COMPLETED
+            - IN_PROGRESS
+            - WAITING
+          description: Статус выполнения задачи
+        priorityTask:
+          type: string
+          enum:
+            - HIGH
+            - MEDIUM
+            - LOW
+          description: Приоритет выполнения задачи
+        Comments:
+          type: array
+          items: 
+            $ref: "#/components/schemas/Comments"
+    Tasks:
+      type: array
+      items: 
+        $ref: "#/components/schemas/Task"
+    Comments:
+      type: object
+      properties:
+        idComment: 
+          type: string
+          example: "1"
+        EmailComentators:
+          type: string
+          example: "user@mail.ru"
+        comment:
+          type: string
+          example: "Мой первый комментарий"
+        postId:
+          type: string
+          example: "152"
+    Comment:
+      type: object
+      properties:
+        comment:
+          type: string
+          example: "Мой первый комментарий"
+    CreateTask:
+      type: object
+      properties:
+        title:
+          type: string
+          example: "Примем заголовка"
+          description: "Обязательное поле для заполнения"
+        description: 
+          type: string
+          example: "Статья, поставленная задача"
+        taskPerformer: 
+          type: string
+          example: "user2@mail.ru"
+        statusTask:
+          type: string
+          enum:
+            - COMPLETED
+            - IN_PROGRESS
+            - WAITING
+          description: Статус выполнения задачи
+        priorityTask:
+          type: string
+          enum:
+            - HIGH
+            - MEDIUM
+            - LOW
+          description: Приоритет выполнения задачи
+      

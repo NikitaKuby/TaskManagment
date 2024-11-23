@@ -2,6 +2,7 @@ package com.example.taskmanagementsystem.service;
 
 import com.example.taskmanagementsystem.domain.model.Role;
 import com.example.taskmanagementsystem.domain.model.UserDetailsImpl;
+import com.example.taskmanagementsystem.exceptions.UserExistException;
 import com.example.taskmanagementsystem.exceptions.UserNotFoundException;
 import com.example.taskmanagementsystem.repository.TaskRepository;
 import com.example.taskmanagementsystem.repository.UserRepository;
@@ -22,7 +23,7 @@ public class UserService {
 
     public UserDetailsImpl create(UserDetailsImpl user) {
         if (repository.existsByUsername(user.getUsername())) {
-            throw new UserNotFoundException();
+            throw new UserExistException();
         }
         return save(user);
     }
@@ -59,6 +60,10 @@ public class UserService {
             return true;
         }else
             return getCurrentUser().getRole().equals(Role.ADMIN);
+    }
+
+    public boolean existUserByUsername(String email){
+        return repository.existsByUsername(email);
     }
 
     @Deprecated

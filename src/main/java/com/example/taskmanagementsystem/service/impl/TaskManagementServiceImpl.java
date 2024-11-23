@@ -6,14 +6,10 @@ import com.example.taskmanagementsystem.domain.model.PriorityTask;
 import com.example.taskmanagementsystem.domain.model.StatusTask;
 import com.example.taskmanagementsystem.domain.model.Task;
 import com.example.taskmanagementsystem.domain.model.TaskComments;
-import com.example.taskmanagementsystem.exceptions.EmailExecutorNotFoundException;
-import com.example.taskmanagementsystem.exceptions.InvalidFormatDataException;
-import com.example.taskmanagementsystem.exceptions.TaskIdNotFoundException;
-import com.example.taskmanagementsystem.exceptions.UserNotFoundException;
+import com.example.taskmanagementsystem.exceptions.*;
 import com.example.taskmanagementsystem.repository.CommentsRepository;
 import com.example.taskmanagementsystem.repository.TaskRepository;
 import com.example.taskmanagementsystem.repository.UserRepository;
-import com.example.taskmanagementsystem.service.AuthenticationService;
 import com.example.taskmanagementsystem.service.TaskManagementService;
 import com.example.taskmanagementsystem.service.UserService;
 import jakarta.transaction.Transactional;
@@ -28,6 +24,7 @@ public class TaskManagementServiceImpl implements TaskManagementService {
     private final TaskRepository taskRepository;
     private final CommentsRepository commentsRepository;
     private final UserService userService;
+    private final UserRepository userRepository;
 
     @Override
     public List<Task> findAllTasks() {
@@ -66,22 +63,28 @@ public class TaskManagementServiceImpl implements TaskManagementService {
     @Override
     @Transactional
     public void deleteById(Long id) {
-        if (taskRepository.existsById(id)&&userService.doesTheUserHavePermission(id)) {
+        if (taskRepository.existsById(id)){
+           if(userService.doesTheUserHavePermission(id)){
             taskRepository.deleteById(id);
-        }else{
-            throw new TaskIdNotFoundException();
-        }
+            }else throw new UserWithoutAccessException();
+        }else throw new TaskIdNotFoundException();
+
+
     }
 
     @Override
     @Transactional
     public Task updatePriority(Long id, String newPriority) {
         if(userService.doesTheUserHavePermission(id)){
-            Task oldTask = taskRepository.findTaskById(id).orElseThrow(TaskIdNotFoundException::new);
-            oldTask.setPriorityTask(PriorityTask.valueOf(newPriority.toUpperCase()));
-            return taskRepository.save(oldTask);
+            try {
+                Task oldTask = taskRepository.findTaskById(id).orElseThrow(TaskIdNotFoundException::new);
+                oldTask.setPriorityTask(PriorityTask.valueOf(newPriority.toUpperCase()));
+                return taskRepository.save(oldTask);
+            } catch (IllegalArgumentException e) {
+                throw new InvalidFormatDataException();
+            }
         }else{
-            throw new InvalidFormatDataException();
+            throw new UserWithoutAccessException();
         }
     }
 
@@ -89,11 +92,15 @@ public class TaskManagementServiceImpl implements TaskManagementService {
     @Transactional
     public Task updateStatus(Long id, String newStatus) {
         if(userService.doesTheUserHavePermission(id)||userService.doesTheUserHavePermissionExecutor(id)){
-            Task oldTask = taskRepository.findTaskById(id).orElseThrow(TaskIdNotFoundException::new);
-            oldTask.setStatusTask(StatusTask.valueOf(newStatus.toUpperCase()));
-            return taskRepository.save(oldTask);
+            try {
+                Task oldTask = taskRepository.findTaskById(id).orElseThrow(TaskIdNotFoundException::new);
+                oldTask.setStatusTask(StatusTask.valueOf(newStatus.toUpperCase()));
+                return taskRepository.save(oldTask);
+            } catch (IllegalArgumentException e) {
+                throw new InvalidFormatDataException();
+            }
         }else{
-            throw new InvalidFormatDataException();
+            throw new UserWithoutAccessException();
         }
     }
 
@@ -102,16 +109,18 @@ public class TaskManagementServiceImpl implements TaskManagementService {
     public Task updateExecutorById(Long id, String email) {
         if(userService.doesTheUserHavePermission(id)) {
             Task oldTask = taskRepository.findTaskById(id).orElseThrow(TaskIdNotFoundException::new);
-            oldTask.setTaskPerformer(email);
-            return taskRepository.save(oldTask);
+            if(userService.existUserByUsername(email)) {
+                oldTask.setTaskPerformer(email);
+                return taskRepository.save(oldTask);
+            }else throw new EmailExecutorNotFoundException();
         }else {
-            throw new EmailExecutorNotFoundException();
+            throw new UserWithoutAccessException();
         }
     }
 
     @Override
     @Transactional
-    public TaskComments createCommentByTaskId(Long taskId, TaskComments comment) {
+    public TaskComments createCommentByTaskId(Long taskId, CommentsDto comment) {
         if(userService.doesTheUserHavePermission(taskId)|| userService.doesTheUserHavePermissionExecutor(taskId)) {
             Task task = taskRepository.findTaskById(taskId).orElseThrow(TaskIdNotFoundException::new);
             TaskComments newComments = TaskComments.builder()
@@ -121,7 +130,7 @@ public class TaskManagementServiceImpl implements TaskManagementService {
                     .build();
             return commentsRepository.save(newComments);
         }else {
-            throw new EmailExecutorNotFoundException();
+            throw new UserWithoutAccessException();
         }
     }
 

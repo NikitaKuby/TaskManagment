@@ -2,10 +2,10 @@ package com.example.taskmanagementsystem.controller;
 
 import com.example.taskmanagementsystem.domain.dto.CommentsDto;
 import com.example.taskmanagementsystem.domain.dto.TaskDto;
-import com.example.taskmanagementsystem.domain.model.Task;
 import com.example.taskmanagementsystem.domain.model.TaskComments;
 import com.example.taskmanagementsystem.service.TaskManagementService;
 import com.google.gson.Gson;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,9 +17,9 @@ import org.springframework.web.bind.annotation.*;
 public class TaskManagementController {
     private final TaskManagementService taskManagementService;
 
-    @GetMapping("/{id}")
-    public ResponseEntity<?> findTaskById(@PathVariable Long id){
-        return new ResponseEntity<>(new Gson().toJson(taskManagementService.findTaskById(id)), HttpStatus.OK);
+    @GetMapping("/{email}")
+    public ResponseEntity<?> findTaskById(@PathVariable String email){
+        return new ResponseEntity<>(new Gson().toJson(taskManagementService.findTasksByAuthors(email)), HttpStatus.OK);
     }
 
 
@@ -29,7 +29,7 @@ public class TaskManagementController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createTask(@RequestBody TaskDto task) {
+    public ResponseEntity<?> createTask(@RequestBody @Valid TaskDto task) {
         return new ResponseEntity<>(new Gson().toJson(taskManagementService.createTask(task)), HttpStatus.CREATED);
     }
 
@@ -57,7 +57,7 @@ public class TaskManagementController {
 
     @PostMapping("/{taskId}/comments")
     public TaskComments createComment(@PathVariable (value = "taskId") Long taskId,
-                                      @RequestBody TaskComments comment) {
+                                      @RequestBody @Valid CommentsDto comment) {
         return taskManagementService.createCommentByTaskId(taskId, comment);
     }
 

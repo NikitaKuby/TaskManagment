@@ -1,5 +1,6 @@
 package com.example.taskmanagementsystem.service;
 
+import com.example.taskmanagementsystem.domain.dto.CommentsDto;
 import com.example.taskmanagementsystem.domain.dto.TaskDto;
 import com.example.taskmanagementsystem.domain.model.Task;
 import com.example.taskmanagementsystem.domain.model.TaskComments;
@@ -15,7 +16,7 @@ public interface TaskManagementService {
     Task updatePriority(Long id, String newPriority);
     Task updateStatus(Long id, String newStatus);
     Task updateExecutorById(Long id,String email);
-    TaskComments createCommentByTaskId(Long taskId, TaskComments comment);
+    TaskComments createCommentByTaskId(Long taskId, CommentsDto comment);
 
 }
 

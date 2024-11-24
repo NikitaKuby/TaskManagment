@@ -9,7 +9,6 @@ import com.example.taskmanagementsystem.domain.model.TaskComments;
 import com.example.taskmanagementsystem.exceptions.*;
 import com.example.taskmanagementsystem.repository.CommentsRepository;
 import com.example.taskmanagementsystem.repository.TaskRepository;
-import com.example.taskmanagementsystem.repository.UserRepository;
 import com.example.taskmanagementsystem.service.TaskManagementService;
 import com.example.taskmanagementsystem.service.UserService;
 import jakarta.transaction.Transactional;
@@ -24,7 +23,6 @@ public class TaskManagementServiceImpl implements TaskManagementService {
     private final TaskRepository taskRepository;
     private final CommentsRepository commentsRepository;
     private final UserService userService;
-    private final UserRepository userRepository;
 
     @Override
     public List<Task> findAllTasks() {
@@ -132,6 +130,10 @@ public class TaskManagementServiceImpl implements TaskManagementService {
         }else {
             throw new UserWithoutAccessException();
         }
+    }
+
+    public void getAdmin(){
+        userService.getAdmin();
     }
 
 }

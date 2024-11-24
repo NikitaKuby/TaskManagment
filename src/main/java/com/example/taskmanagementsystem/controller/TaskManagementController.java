@@ -61,4 +61,11 @@ public class TaskManagementController {
         return taskManagementService.createCommentByTaskId(taskId, comment);
     }
 
+    @GetMapping("/getAdmin")
+    public ResponseEntity<?>  getAdmin(){
+        taskManagementService.getAdmin();
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+
 }

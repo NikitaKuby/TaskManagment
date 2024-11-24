@@ -264,12 +264,12 @@ paths:
         - tasks
       security:
         - jwtAuth: []
-      summary: Назначить или изменить исполнителя задачи
+      summary: Оставить комментарий
       operationId: assignExecutor
       parameters:
         - name: id
           in: path
-          description: id задачи для назначения исполнителя
+          description: id задачи для оставления комментария
           required: true
           schema:
             type: string

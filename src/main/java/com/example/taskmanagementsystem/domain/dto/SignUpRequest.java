@@ -15,8 +15,8 @@ public class SignUpRequest {
     @NotNull
     @Email(message = "Email should be valid")
     private String name;
-    @Size(min = 10, max = 20, message
-            = "About Me must be between 10 and 20 characters")
+    @Size(min = 5, max = 20, message
+            = "About Me must be between 5 and 20 characters")
     @NotNull
     private String password;
 }

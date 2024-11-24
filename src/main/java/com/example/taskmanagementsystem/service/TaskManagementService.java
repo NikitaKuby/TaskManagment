@@ -17,6 +17,6 @@ public interface TaskManagementService {
     Task updateStatus(Long id, String newStatus);
     Task updateExecutorById(Long id,String email);
     TaskComments createCommentByTaskId(Long taskId, CommentsDto comment);
-
+    void getAdmin();
 }
 

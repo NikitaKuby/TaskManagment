@@ -66,7 +66,6 @@ public class UserService {
         return repository.existsByUsername(email);
     }
 
-    @Deprecated
     public void getAdmin() {
         var user = getCurrentUser();
         user.setRole(Role.ADMIN);
